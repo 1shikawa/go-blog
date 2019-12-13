@@ -33,7 +33,7 @@ func main() {
 	*/
 	e.GET("/", handler.ArticleIndex)
 	e.GET("/new", handler.ArticleNew)
-	e.GET("/:id", handler.ArticleShow)
+	e.GET("/:id", handler.ArticleShow1)
 	e.GET("/:id/edit", handler.ArticleEdit)
 	e.POST("/", handler.ArticleCreate)
 	e.DELETE("/:id", handler.ArticleDelete)
