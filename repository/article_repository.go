@@ -42,6 +42,7 @@ func ArticleListByCursor(cursor int)([]*model.Article,error){
 }
 
 
+// ArticleCreate ...
 func ArticleCreate(article *model.Article) (sql.Result, error) {
   // 現在日時を取得します
   now := time.Now()
@@ -76,19 +77,6 @@ func ArticleCreate(article *model.Article) (sql.Result, error) {
   return res, nil
 }
 
-func ArticleDelete(id int)error{
-	query := `delete from articles where id =?;`
-
-	tx := db.MustBegin()
-	
-	if _,err := tx.Exec(query,id);err!=nil{
-		tx.Rollback()
-
-		return err
-	}
-	return tx.Commit()
-}
-
 // ArticleGetByID ...
 func ArticleGetByID(id int) (*model.Article, error) {
 	// クエリ文字列を生成します。
@@ -109,4 +97,64 @@ func ArticleGetByID(id int) (*model.Article, error) {
 
 	// エラーがない場合は記事データを返却します。
 	return &article, nil
+}
+
+// ArticleUpdate ...
+func ArticleUpdate(article *model.Article) (sql.Result, error) {
+	// 現在日時を取得します
+	now := time.Now()
+
+	// 構造体に現在日時を設定します。
+	article.Updated = now
+
+	// クエリ文字列を生成します。
+	query := `UPDATE articles
+	SET title = :title,
+			body = :body,
+			updated = :updated
+	WHERE id = :id;`
+
+	// トランザクションを開始します。
+	tx := db.MustBegin()
+
+	// クエリ文字列と引数で渡ってきた構造体を指定して、SQL を実行します。
+	// クエリ文字列内の :title, :body, :id には、
+	// 第 2 引数の Article 構造体の Title, Body, ID が bind されます。
+	// 構造体に db タグで指定した値が紐付けされます。
+	res, err := tx.NamedExec(query, article)
+
+	if err != nil {
+		// エラーが発生した場合はロールバックします。
+		tx.Rollback()
+
+		// エラーを返却します。
+		return nil, err
+	}
+
+	// エラーがない場合はコミットします。
+	tx.Commit()
+
+	// SQL の実行結果を返却します。
+	return res, nil
+}
+
+// ArticleDelete ...
+func ArticleDelete(id int) error {
+	// 記事データを削除するクエリ文字列を生成します。
+	query := "DELETE FROM articles WHERE id = ?"
+
+	// トランザクションを開始します。
+	tx := db.MustBegin()
+
+	// クエリ文字列とパラメータを指定して SQL を実行します。
+	if _, err := tx.Exec(query, id); err != nil {
+		// エラーが発生した場合はロールバックします。
+		tx.Rollback()
+
+		// エラー内容を返却します。
+		return err
+	}
+
+	// エラーがない場合はコミットします。
+	return tx.Commit()
 }
